@@ -1,0 +1,83 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "mspOfferName": {
+            "type": "string",
+			"defaultValue": "Onesec D4C Managed Services",
+            "metadata": {
+                "description": "Specify the name of the offer from the Managed Service Provider"
+            }
+        },
+        "mspOfferDescription": {
+            "type": "string",
+			"defaultValue": "Provides a managed service capability for Microsoft D4C by Onesec",
+            "metadata": {
+                "description": "Name of the Managed Service Provider offering"
+            }
+        },
+        "managedByTenantId": {
+            "type": "string",
+			"defaultValue": "b9fafec0-01e1-4dcc-ab3b-efdd85a37bf5",
+            "metadata": {
+                "description": "Specify the tenant id of the Managed Service Provider"
+            }
+        },
+        "authorizations": {
+            "type": "array",
+			"defaultValue": [
+                {
+					"principalId": "75c5de52-36c3-446d-8b41-4cfb90967584",
+                    "principalIdDisplayName": "MDR T3 - Threat Hunter",
+                    "roleDefinitionId": "acdd72a7-3385-48ef-bd42-f606fba81ae7" 
+                },
+				{ 
+					"principalId": "75c5de52-36c3-446d-8b41-4cfb90967584", 
+                    "principalIdDisplayName": "MDR T3 - Threat Hunter",
+					"roleDefinitionId": "39bc4728-0917-49c7-9d2c-d95423bc2eb4"
+                }
+            ],
+            "metadata": {
+                "description": "Specify an array of objects, containing tuples of Azure Active Directory principalId, a Azure roleDefinitionId, and an optional principalIdDisplayName. The roleDefinition specified is granted to the principalId in the provider's Active Directory and the principalIdDisplayName is visible to customers."
+            }
+        }              
+    },
+    "variables": {
+        "mspRegistrationName": "[guid(parameters('mspOfferName'))]",
+        "mspAssignmentName": "[guid(parameters('mspOfferName'))]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.ManagedServices/registrationDefinitions",
+            "apiVersion": "2019-06-01",
+            "name": "[variables('mspRegistrationName')]",
+            "properties": {
+                "registrationDefinitionName": "[parameters('mspOfferName')]",
+                "description": "[parameters('mspOfferDescription')]",
+                "managedByTenantId": "[parameters('managedByTenantId')]",
+                "authorizations": "[parameters('authorizations')]"
+            }
+        },
+        {
+            "type": "Microsoft.ManagedServices/registrationAssignments",
+            "apiVersion": "2019-06-01",
+            "name": "[variables('mspAssignmentName')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ManagedServices/registrationDefinitions/', variables('mspRegistrationName'))]"
+            ],
+            "properties": {
+                "registrationDefinitionId": "[resourceId('Microsoft.ManagedServices/registrationDefinitions/', variables('mspRegistrationName'))]"
+            }
+        }
+    ],
+    "outputs": {
+        "mspOfferName": {
+            "type": "string",
+            "value": "[concat('Managed by', ' ', parameters('mspOfferName'))]"
+        },
+        "authorizations": {
+            "type": "array",
+            "value": "[parameters('authorizations')]"
+        }
+    }
+}
